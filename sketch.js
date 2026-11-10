@@ -9,8 +9,12 @@
 // ONE FIST = ONE LOCALISED AREA
 // TWO FISTS = TWO INDEPENDENT LOCALISED AREAS
 //
-// CAMERA PREVIEW ENABLED
+// CAMERA PREVIEW REMAINS ENABLED
 // ORIGINAL THREE-LAYER LUMINOUS TRAILS
+//
+// ONLY DISPLAY CHANGES:
+// 1. HIDE VISIBLE SERVO GRID
+// 2. UPDATE STATUS WORDING
 // =====================================================
 
 let handPose;
@@ -28,7 +32,6 @@ const MS_NEUTRAL = 90;
 const MS_MIN = 5;
 const MS_MAX = 180;
 
-// Confirmed physical servo-to-PCA mapping
 const msChannelForServo = [
   0, 1, 8, 9,
   2, 3, 10, 11,
@@ -36,7 +39,6 @@ const msChannelForServo = [
   6, 7, 14, 15
 ];
 
-// Maximum convex mountain
 const msMountainUp = [
   110, 126, 119, 103,
   135, 166, 151, 114,
@@ -44,7 +46,6 @@ const msMountainUp = [
   105, 132, 121, 99
 ];
 
-// Maximum concave valley
 const msMountainDown = [
   70, 55, 63, 76,
   47, 17, 31, 66,
@@ -52,7 +53,6 @@ const msMountainDown = [
   79, 51, 61, 83
 ];
 
-// Staggered 4 x 4 coordinates
 const msCoordinates = Array.from(
   { length: 16 },
   (_, i) => ({
@@ -79,7 +79,6 @@ let msWideReference = null;
 let msMountainDirection = 1;
 let msLastSend = 0;
 
-// Independent grip states for two hands
 let msGrips = [null, null];
 
 // =====================================================
@@ -228,7 +227,6 @@ function msFistScore(hand) {
 
 // =====================================================
 // DETECT HANDS
-// SORT BY HORIZONTAL POSITION FOR STABLE ASSIGNMENT
 // =====================================================
 
 function msDetectedHands() {
@@ -319,7 +317,6 @@ function msUpdateGesture() {
 
   // ===================================================
   // ONE OR TWO FISTS = LOCALISED INTERACTIONS
-  // NEVER ACTIVATE LARGE-SCALE MOUNTAIN
   // ===================================================
 
   if (activeFists.length > 0) {
@@ -327,7 +324,6 @@ function msUpdateGesture() {
     msTwoPrevious = null;
     msWideReference = null;
 
-    // Start from neutral and combine both local effects
     msTargets.fill(MS_NEUTRAL);
 
     for (let i = 0; i < 2; i++) {
@@ -383,7 +379,6 @@ function msUpdateGesture() {
       }
     }
 
-    // Keep all servo angles within calibrated range
     for (let s = 0; s < MS_COUNT; s++) {
       msTargets[s] = msClamp(
         msTargets[s],
@@ -392,15 +387,15 @@ function msUpdateGesture() {
       );
     }
 
+    // UPDATED WORDING ONLY
     msMode =
       activeFists.length === 2
-        ? "DUAL LOCAL PULL"
-        : "LOCAL PULL";
+        ? "DUAL SCULPT"
+        : "SINGLE SCULPT";
 
     return;
   }
 
-  // No fists currently active
   msGrips = [null, null];
 
   // ===================================================
@@ -475,19 +470,21 @@ function msUpdateGesture() {
   }
 
   // ===================================================
-  // NO ACTIVE GESTURE = RETURN TO NEUTRAL
+  // NO ACTIVE GESTURE = NEUTRAL
   // ===================================================
 
   msTwoPrevious = null;
   msWideReference = null;
 
   msTargets.fill(MS_NEUTRAL);
-  msMode = "RELEASE";
+
+  // UPDATED WORDING ONLY
+  msMode = "NEUTRAL";
 }
 
 // =====================================================
 // ORIGINAL WORKING LUMINOUS TRAILS
-// NO GLOW CHANGES
+// UNCHANGED
 // =====================================================
 
 function msDrawTrails() {
@@ -517,7 +514,6 @@ function msDrawTrails() {
     const p = positions[i];
     const mode = modes[i];
 
-    // Clear old trail when tracking mode changes
     if (mode !== msTrailModes[i]) {
       msTrails[i] = [];
       msTrailPositions[i] = null;
@@ -546,8 +542,8 @@ function msDrawTrails() {
         const cool =
           msMode === "VALLEY" ||
           (
-            (msMode === "LOCAL PULL" ||
-             msMode === "DUAL LOCAL PULL") &&
+            (msMode === "SINGLE SCULPT" ||
+             msMode === "DUAL SCULPT") &&
             msTargets.some(v => v < 85)
           ) ||
           down;
@@ -623,82 +619,6 @@ function msDrawTrails() {
 }
 
 // =====================================================
-// 36-UNIT CONFIGURATION MAP
-// =====================================================
-
-function msDrawGrid() {
-
-  const diameter = Math.min(
-    width / 14,
-    height / 10,
-    44
-  );
-
-  const gap = diameter * 1.16;
-
-  const left = width / 2 - 2.7 * gap;
-  const top = height / 2 - 2.5 * gap;
-
-  textAlign(CENTER, CENTER);
-
-  for (let row = 0; row < 6; row++) {
-
-    for (let col = 0; col < 6; col++) {
-
-      const x =
-        left + col * gap +
-        (row % 2 ? gap * 0.4 : 0);
-
-      const y = top + row * gap;
-
-      const active =
-        row >= 1 && row <= 4 &&
-        col >= 1 && col <= 4;
-
-      strokeWeight(1);
-
-      stroke(
-        active
-          ? color(85, 205, 210, 170)
-          : color(130, 130, 130, 90)
-      );
-
-      fill(
-        active
-          ? color(8, 70, 78, 130)
-          : color(115, 115, 115, 75)
-      );
-
-      circle(x, y, diameter);
-
-      if (active) {
-
-        const number = (row - 1) * 4 + col;
-
-        noStroke();
-        fill(245);
-
-        textSize(Math.max(11, diameter * 0.33));
-
-        text(
-          number,
-          x,
-          y - diameter * 0.15
-        );
-
-        textSize(Math.max(8, diameter * 0.22));
-
-        text(
-          Math.round(msCurrent[number - 1]) + "°",
-          x,
-          y + diameter * 0.19
-        );
-      }
-    }
-  }
-}
-
-// =====================================================
 // DRAW
 // =====================================================
 
@@ -706,7 +626,10 @@ function draw() {
 
   background(0);
 
-  // MIRRORED CAMERA PREVIEW
+  // ===================================================
+  // MIRRORED SELFIE CAMERA - UNCHANGED
+  // ===================================================
+
   if (
     video &&
     video.elt &&
@@ -725,15 +648,18 @@ function draw() {
   msUpdateGesture();
 
   const ease =
-    msMode === "RELEASE" ? 0.13 : 0.28;
+    msMode === "NEUTRAL" ? 0.13 : 0.28;
 
   for (let i = 0; i < MS_COUNT; i++) {
     msCurrent[i] +=
       (msTargets[i] - msCurrent[i]) * ease;
   }
 
+  // GLOWING TRAILS - UNCHANGED
   msDrawTrails();
-  msDrawGrid();
+
+  // VISIBLE GRID REMOVED
+  // INVISIBLE 4x4 SERVO MAPPING REMAINS ACTIVE
 
   noStroke();
   fill(245);
@@ -743,7 +669,10 @@ function draw() {
 
   text(msMode, width / 2, 45);
 
-  // BLE SERVO ANGLE UPDATES
+  // ===================================================
+  // BLE SERVO ANGLE UPDATES - UNCHANGED
+  // ===================================================
+
   const now = millis();
 
   if (
