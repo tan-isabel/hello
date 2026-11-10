@@ -1,0 +1,11 @@
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;touch-action:none}canvas{display:block}button{position:fixed;top:16px;z-index:20;border:1px solid #777;border-radius:30px;padding:11px 15px;background:#171722;color:white;font-weight:600}#connectBLE{left:16px}#connectBLE.connected{background:#145044}#resetButton{right:16px}#status{position:fixed;bottom:12px;left:16px;color:#bbb;font-size:12px;pointer-events:none}
+#trackingStatus {
+  position: fixed;
+  left: 20px;
+  bottom: 14px;
+  z-index: 20;
+  color: #ddd;
+  background: rgba(0,0,0,.65);
+  font-size: 12px;
+  pointer-events: none;
+}
